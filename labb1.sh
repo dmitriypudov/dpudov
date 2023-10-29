@@ -21,19 +21,12 @@ if ! [ -f "$SOURCE_FILE" ] || ! [ -r "$SOURCE_FILE" ]; then
   exit 1
 fi
 
-
-while IFS= read -r line; do
-  if echo "$line" | grep -qE '^\s*//&Output:'; then
-    OUTPUT_NAME=$(echo "$line" | sed -e 's/^\s*\/\/&Output:\s*//')
-    break
-  fi
-done < "$SOURCE_FILE"
+OUTPUT_NAME=$(grep -oP '^\s*//&Output:\s*\K.*' "$SOURCE_FILE" | head -n 1)
 
 if [ -z "$OUTPUT_NAME" ]; then
   echo "Error: Output file name not found in the source file"
   exit 1
 fi
-
 
 if echo "$SOURCE_FILE" | grep -qE '\.c$|\.cpp$'; then
   g++ "$SOURCE_FILE" -o "$TEMP_DIR/$OUTPUT_NAME" -lstdc++
@@ -44,7 +37,6 @@ else
   echo "Error: Unsupported file extension"
   exit 1
 fi
-
 
 mv "$TEMP_DIR/$OUTPUT_NAME" "$(dirname "$SOURCE_FILE")/"
 echo "Build successful. Output file: $(dirname "$SOURCE_FILE")/$OUTPUT_NAME"
